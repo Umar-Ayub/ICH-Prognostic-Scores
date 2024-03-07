@@ -169,9 +169,9 @@ def calculate_ideal_cutoffs(df, metrics_df=metrics_df):
         plt.close()
 
 
-    return summary_table
+    return summary_table, metrics_df
 
-summary_table = calculate_ideal_cutoffs(df)
+summary_table, metrics_df = calculate_ideal_cutoffs(df)
 print(summary_table)
 summary_table.to_csv('summary_table_NIHSSADM.csv', index=False)
 metrics_df.to_csv('prognostic_score_metrics.csv', index=False)
