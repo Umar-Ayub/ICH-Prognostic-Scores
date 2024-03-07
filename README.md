@@ -71,11 +71,3 @@ Ensure you have these dependencies installed before running the scripts.
 ## Contributing
 
 We welcome contributions and suggestions to improve the analysis and predictions of ICH outcomes. Please feel free to fork the repository, make your changes, and submit a pull request.
-
-## License
-
-[Specify your project's license here]
-
-## Contact
-
-For questions and feedback, please contact [Your Contact Information].
