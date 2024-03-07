@@ -1,16 +1,16 @@
 import pandas as pd
 import os
-from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix
+from sklearn.metrics import roc_auc_score, roc_curve, confusion_matrix, auc
 import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.utils import resample
 
 
-df = pd.read_csv('ich_data_w_scores.csv')
+df = pd.read_csv('../ich_data_w_scores.csv')
 
 
 # Create a directory for images
-os.makedirs('images', exist_ok=True)
+os.makedirs('../images', exist_ok=True)
 
 
 # Binarize MRS90 for functional outcome analysis
@@ -105,12 +105,12 @@ for score in scores:
                  fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
         
         # Save the plot
-        plt.savefig(f'images/ROC_{score}_{outcome_name}.png')
+        plt.savefig(f'../images/ROC_{score}_{outcome_name}.png')
         plt.close()
 
-metrics_df.to_csv('prognostic_score_metrics.csv', index=False)
 
-def calculate_ideal_cutoffs(df):
+
+def calculate_ideal_cutoffs(df, metrics_df=metrics_df):
     outcomes = {
         'MORT90': 'MORT90',
         'MRS90_binarized': 'MRS90_binarized'
@@ -139,8 +139,39 @@ def calculate_ideal_cutoffs(df):
             'AUC': [best_auc]
         })
         summary_table = pd.concat([summary_table, new_row], ignore_index=True)
+
+
+        # plot roc of best cut off
+        df['NIHSSADM_binarized'] = df['NIHSSADM'].apply(lambda x: 1 if x > best_cutoff else 0)
+        auc_lower, auc_upper = bootstrap_auc(df[outcome_column], df['NIHSSADM_binarized'])
+        metrics = calculate_performance_metrics(df[outcome_column], df['NIHSSADM_binarized'])
+
+        new_row = pd.DataFrame({
+            'Score': [f"NIHSSADM_{best_cutoff}"], 
+            'Outcome': [outcome_name], 
+            'AUC CI Lower': [auc_lower],
+            'AUC CI Upper': [auc_upper],
+            **metrics
+        })
+        metrics_df = pd.concat([metrics_df, new_row], ignore_index=True)
+
+                
+        # Plot ROC curve
+        plt.figure(figsize=(8, 6))
+        plot_roc_curve(df[outcome_column], df['NIHSSADM_binarized'], score_name=f"NIHSSADM_{best_cutoff}", outcome_name=outcome_name)
+        
+        # Add text annotations with metrics
+        plt.text(0.6, 0.2, f'AUC: {metrics["AUC"]:.2f}\nSensitivity: {metrics["Sensitivity"]:.2f}\nSpecificity: {metrics["Specificity"]:.2f}\nPPV: {metrics["PPV"]:.2f}\nNPV: {metrics["NPV"]:.2f}', 
+                 fontsize=12, bbox=dict(facecolor='white', alpha=0.5))
+        
+        # Save the plot
+        plt.savefig(f'../images/BEST-NIHSS_{best_cutoff}_{outcome_name}.png')
+        plt.close()
+
+
     return summary_table
 
 summary_table = calculate_ideal_cutoffs(df)
 print(summary_table)
 summary_table.to_csv('summary_table_NIHSSADM.csv', index=False)
+metrics_df.to_csv('prognostic_score_metrics.csv', index=False)
