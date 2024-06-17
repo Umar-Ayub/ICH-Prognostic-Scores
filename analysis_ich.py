@@ -8,7 +8,6 @@ from sklearn.utils import resample
 
 df = pd.read_csv('../ich_data_w_scores.csv')
 
-
 # Create a directory for images
 os.makedirs('../images', exist_ok=True)
 
